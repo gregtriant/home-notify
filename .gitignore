@@ -1,0 +1,5 @@
+.pio
+.vscode
+
+globals.h
+.clang-format
