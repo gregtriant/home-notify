@@ -1,21 +1,32 @@
-
 #include "App.h"
 
-App::App(String appName, SocketClient *sc) : display(LCD_ADDRESS), button(BUTTON_PIN)
+App::App(String appName, SocketClient *sc)
+    : display(LCD_ADDRESS),
+      button(BUTTON_PIN),
+      ledTimer([this]() { this->toggleLed_cb(nullptr); }, 1*1000, 0, MILLIS),
+      displayTimer([this]() { this->display.backlightOff(); }, 10*1000, 0, MILLIS)
 {
+    this->sc = sc;
     display.begin();
     display.clear();
     display.print(appName);
     display.setCursor(0, 1);
     display.print("Version: ");
     display.print(VERSION);
+
+    displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
 }
 
 
-void App::setMessage(String message) {
-    this->message = message;
-    display.clearRow(0);
-    display.print(message, 0);
+void App::recievedMessage(String message) {
+    display.backlightOn(); // Turn on backlight when a new message is received.
+    displayTimer.start();  // Restart the LCD timer.
+
+    setMessage(message);
+    showMessage(message);
+    // Start the led timer.
+    ledTimer.start();
+    sc->sendLog(message);
 }
 
 
@@ -40,6 +51,8 @@ void App::begin()
 void App::loop()
 {
     button.tick();
+    ledTimer.update();
+    displayTimer.update();
 }
 
 
@@ -48,12 +61,18 @@ void App::handleClick(void *parameter)
 {
     App *appInstance = static_cast<App *>(parameter);
     Serial.println("Click() from static method");
+    appInstance->ledTimer.stop();
+    appInstance->ledOFF();
+
+    appInstance->display.backlightOn(); // Turn on backlight when a new message is received.
+    appInstance->displayTimer.start();  // Restart the LCD timer.
 }
 
 void App::handleDoubleClick(void *parameter)
 {
     App *appInstance = static_cast<App *>(parameter);
     Serial.println("DoubleClick() from static method");
+    appInstance->recievedMessage(appInstance->defaultMessage);
 }
 
 void App::handleLongPressStart(void *parameter)

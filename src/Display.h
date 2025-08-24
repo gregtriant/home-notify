@@ -17,6 +17,8 @@ class Display {
     void print(const String &message, int row, int col);
 
     void setCursor(uint8_t col, uint8_t row);
+    void backlightOff();
+    void backlightOn();
     void setBrightness(uint8_t brightness);
 };
 

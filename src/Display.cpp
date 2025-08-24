@@ -46,6 +46,14 @@ void Display::setCursor(uint8_t col, uint8_t row) {
     lcd.setCursor(col, row);
 }
 
+void Display::backlightOff() {
+    lcd.noBacklight();
+}
+
+void Display::backlightOn() {
+    lcd.backlight();
+}
+
 void Display::setBrightness(uint8_t brightness) {
     // Assuming brightness is a value between 0 and 255
     if (brightness > 255) brightness = 255;

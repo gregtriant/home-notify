@@ -2,14 +2,23 @@
 #include <Arduino.h>
 #include <OneButton.h>
 #include <SocketClient.h>
+#include <arduino-timer.h>
+#include <Ticker.h>
 
 #include "Definitions.h"
 #include "Display.h"
 
 class App {
    private:
+    SocketClient *sc;
+
     String message;
+    String defaultMessage; // Message to show on double click.
     String datetime;
+
+    bool isUnreadMessage = false;
+    Ticker ledTimer; // Timer for LED blinking.
+    Ticker displayTimer; // Timer to turn off LCD after some time.
 
     uint8_t ledState = HIGH; // LOW is ON
 
@@ -28,7 +37,21 @@ class App {
     void begin();
     void loop();
 
-    void setMessage(String message);
+    void recievedMessage(String message);
+
+    void showMessage(String message) {
+        display.clearRow(0);
+        display.print(message, 0);
+    }
+
+    void setMessage(String message) {
+        this->message = message;
+    }
+
+    void setDefaultMessage(String message)
+    {
+        this->defaultMessage = message;
+    }
 
     String getMessage() const
     {
@@ -38,6 +61,12 @@ class App {
     String getDatetime() const
     {
         return datetime;
+    }
+
+    bool toggleLed_cb(void *) {
+        ledState = !ledState;
+        digitalWrite(LED_PIN, ledState);
+        return true; // Keep the timer running.
     }
 
     void ledON()

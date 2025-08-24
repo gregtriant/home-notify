@@ -34,9 +34,8 @@ void receivedCommand(JsonDoc doc)
             app->ledOFF();
         }
 
-    } else if (command != app->getMessage()) {
-        app->setMessage(command);
-        testClient.sendLog(command);
+    } else if (command != app->getMessage()) { // New message recieved
+        app->recievedMessage(command);
     }
     testClient.sendStatusWithSocket();
 }
@@ -55,6 +54,10 @@ void connected(JsonDoc doc)
     serializeJson(doc, Serial);
     Serial.println();
     // do something with the connected data
+    String defaultMessage = doc["default_message"].as<String>();
+    Serial.print("Default message: ");
+    Serial.println(defaultMessage);
+    app->setDefaultMessage(defaultMessage);
 
     testClient.sendNotification("Connected!");
     testClient.sendStatusWithSocket(true);
