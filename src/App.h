@@ -15,11 +15,7 @@ class App {
     String message;
     String defaultMessage; // Message to show on double click.
     String datetime;
-
     bool isUnreadMessage = false;
-    Ticker ledTimer; // Timer for LED blinking.
-    Ticker displayTimer; // Timer to turn off LCD after some time.
-
     uint8_t ledState = HIGH; // LOW is ON
 
     float temperature;
@@ -29,12 +25,14 @@ class App {
     // Adafruit_BME280 bme;
     Display display;
     OneButton button;
+    Ticker ledTimer;         // Timer for LED blinking.
+    Ticker displayTimer;     // Timer to turn off LCD after some time.
     SocketClient *socketClient;
 
-   public:
+public:
     App(String appName, SocketClient *sc);
 
-    void begin();
+    void init();
     void loop();
 
     void recievedMessage(String message);

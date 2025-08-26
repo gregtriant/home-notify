@@ -13,7 +13,7 @@
 
 
 I2CScanner   scanner;
-SocketClient testClient;
+SocketClient socketClient;
 App *app;
 
 void sendStatus(JsonDoc status)
@@ -28,16 +28,20 @@ void receivedCommand(JsonDoc doc)
     if (command.startsWith("@")) {
         if (command == "@clear") {
             app->setMessage("");
+            app->showMessage(app->getMessage());
         } else if (command == "@ledon") {
             app->ledON();
         } else if (command == "@ledoff") {
             app->ledOFF();
+        } else if (command == "@reboot") {
+            socketClient.disconnect();
+            ESP.restart();
         }
 
     } else if (command != app->getMessage()) { // New message recieved
         app->recievedMessage(command);
     }
-    testClient.sendStatusWithSocket();
+    socketClient.sendStatusWithSocket();
 }
 
 void entityChanged(JsonDoc doc)
@@ -45,7 +49,7 @@ void entityChanged(JsonDoc doc)
     if (strcmp(doc["entity"], "counter") == 0) {
         // counter = doc["value"].as<int>();
     }
-    testClient.sendStatusWithSocket();
+    socketClient.sendStatusWithSocket();
 }
 
 void connected(JsonDoc doc)
@@ -59,8 +63,8 @@ void connected(JsonDoc doc)
     Serial.println(defaultMessage);
     app->setDefaultMessage(defaultMessage);
 
-    testClient.sendNotification("Connected!");
-    testClient.sendStatusWithSocket(true);
+    socketClient.sendNotification("Connected!");
+    socketClient.sendStatusWithSocket(true);
 }
 
 /**
@@ -92,14 +96,14 @@ void setup()
     scanner.Init();
     scanner.Scan();
 
-    testClient.init(&config);
+    socketClient.init(&config);
 
-    app = new App(config.name, &testClient);
-    app->begin();
+    app = new App(config.name, &socketClient);
+    app->init();
 }
 
 void loop()
 {
-    testClient.loop();
+    socketClient.loop();
     app->loop();
 }

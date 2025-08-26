@@ -30,7 +30,7 @@ void App::recievedMessage(String message) {
 }
 
 
-void App::begin()
+void App::init()
 {
     // LED
     pinMode(LED_PIN, OUTPUT);
@@ -59,36 +59,33 @@ void App::loop()
 // ------------------------- Button functions ----------------------- // 
 void App::handleClick(void *parameter)
 {
-    App *appInstance = static_cast<App *>(parameter);
+    App *self = static_cast<App *>(parameter);
     Serial.println("Click() from static method");
-    appInstance->ledTimer.stop();
-    appInstance->ledOFF();
+    self->ledTimer.stop();
+    self->ledOFF();
 
-    appInstance->display.backlightOn(); // Turn on backlight when a new message is received.
-    appInstance->displayTimer.start();  // Restart the LCD timer.
+    self->display.backlightOn(); // Turn on backlight when a new message is received.
+    self->displayTimer.start();  // Restart the LCD timer.
 }
 
 void App::handleDoubleClick(void *parameter)
 {
-    App *appInstance = static_cast<App *>(parameter);
+    App *self = static_cast<App *>(parameter);
     Serial.println("DoubleClick() from static method");
-    appInstance->recievedMessage(appInstance->defaultMessage);
+    self->recievedMessage(self->defaultMessage);
 }
 
 void App::handleLongPressStart(void *parameter)
 {
-    App *appInstance = static_cast<App *>(parameter);
     Serial.println("LongPressStart() from static method");
 }
 
 void App::handleDuringLongPress(void *parameter)
 {
-    App *appInstance = static_cast<App *>(parameter);
     Serial.println("DuringLongPress() from static method");
 }
 
 void App::handleLongPressStop(void *parameter)
 {
-    App *appInstance = static_cast<App *>(parameter);
     Serial.println("LongPressStop() from static method");
 }
