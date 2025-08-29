@@ -1,18 +1,18 @@
+#include <Adafruit_BME280.h>
 #include <Arduino.h>
-#include "I2CScanner.h"
+#include <SocketClient.h>
+#include <Wire.h>
+#include <time.h>
+
+#include "App.h"
+#include "Definitions.h"
 #include "Display.h"
+#include "I2CScanner.h"
 #include "OneButton.h"
 #include "globals.h"
-#include <SocketClient.h>
-
-#include <Wire.h>
-#include <Adafruit_BME280.h>
-
-#include "Definitions.h"
-#include "App.h"
 
 
-I2CScanner   scanner;
+I2CScanner scanner;
 SocketClient socketClient;
 App *app;
 
@@ -38,7 +38,7 @@ void receivedCommand(JsonDoc doc)
             ESP.restart();
         }
 
-    } else if (command != app->getMessage()) { // New message recieved
+    } else if (command != app->getMessage()) {  // New message recieved
         app->recievedMessage(command);
     }
     socketClient.sendStatusWithSocket();
@@ -70,22 +70,21 @@ void connected(JsonDoc doc)
 /**
  * Configuration for the SocketClient
  */
-SocketClientConfig config = {
-    .name            = "Home-Notify",
-    .version         = VERSION,
-    .type            = "ESP8266",
-    .ledPin          = LED_PIN,
-    .host            = "api.sensordata.space",
-    .port            = 443,
-    .isSSL           = true,
-    .token           = token, // from globals.h
-    .handleWifi      = true,
-    .sendStatus      = sendStatus,
+SocketClientConfig_t config = {
+    .name = "Home-Notify",
+    .version = VERSION,
+    .type = "ESP8266",
+    .ledPin = LED_PIN,
+    .host = "insecure2.sensordata.space", //"api.sensordata.space",
+    .port = 80,
+    .isSSL = false,
+    .token = token,  // from globals.h
+    .handleWifi = true,
+    .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
-    .entityChanged   = entityChanged,
-    .connected       = connected,
+    .entityChanged = entityChanged,
+    .connected = connected,
 };
-
 
 void setup()
 {
@@ -100,10 +99,34 @@ void setup()
 
     app = new App(config.name, &socketClient);
     app->init();
+
+    Serial.println("ESP8266 Memory Info");
+
+    // Basic free heap info
+    Serial.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
+    Serial.printf("Max allocatable block: %d bytes\n", ESP.getMaxFreeBlockSize());
+    Serial.printf("Heap fragmentation: %d %%\n", ESP.getHeapFragmentation());
+
+    // Flash / sketch size info
+    Serial.printf("Flash chip size: %d bytes\n", ESP.getFlashChipRealSize());
+    Serial.printf("Sketch size: %d bytes\n", ESP.getSketchSize());
+    Serial.printf("Free sketch space: %d bytes\n", ESP.getFreeSketchSpace());
 }
 
 void loop()
 {
     socketClient.loop();
     app->loop();
+
+    // Print heap status periodically
+    static unsigned long lastPrint = 0;
+    if (millis() - lastPrint > 5000) {
+        lastPrint = millis();
+        Serial.printf("\n[Heap check] Free: %d, Max block: %d, Frag: %d%%\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
+    
+        char buf[25];
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", app->getLocalTm());
+        Serial.println(buf);
+    }
+
 }

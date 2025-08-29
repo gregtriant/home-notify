@@ -53,6 +53,26 @@ void App::loop()
     button.tick();
     ledTimer.update();
     displayTimer.update();
+
+    // Time related things.
+    static unsigned long lastUpdate = 0;
+    if (millis() - lastUpdate > 1000) {
+        lastUpdate = millis();
+        time_t now = time(nullptr);
+        // Check if NTP has synced (now > some threshold after 1970)
+        if (!this->gTimeSynced && now > 8 * 3600 * 2) {
+            this->gTimeSynced = true;
+            Serial.println("NTP time synced!");
+        }
+        if (gTimeSynced) {
+            gLocalTime = now + this->sc->getLocalTimeOffset();   // Apply server-provided offset.
+            gmtime_r(&gLocalTime, &gLocalTm);                    // Fill struct tm with updated time.
+
+            char buf[25];
+            strftime(buf, sizeof(buf), "%d/%m   %H:%M:%S", &gLocalTm);
+            display.print(buf, 1);
+        }
+    }
 }
 
 

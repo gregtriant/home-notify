@@ -4,6 +4,7 @@
 #include <SocketClient.h>
 #include <arduino-timer.h>
 #include <Ticker.h>
+#include <time.h>
 
 #include "Definitions.h"
 #include "Display.h"
@@ -28,6 +29,11 @@ class App {
     Ticker ledTimer;         // Timer for LED blinking.
     Ticker displayTimer;     // Timer to turn off LCD after some time.
     SocketClient *socketClient;
+
+    // Time related things
+    time_t gLocalTime = 0;       // Timestamp with offset applied
+    struct tm gLocalTm;          // Broken-down time
+    bool gTimeSynced = false;    // Flag to indicate NTP synced
 
 public:
     App(String appName, SocketClient *sc);
@@ -54,6 +60,11 @@ public:
     String getMessage() const
     {
         return message;
+    }
+
+    tm *getLocalTm() const
+    {
+        return (tm *)&gLocalTm;
     }
 
     String getDatetime() const

@@ -7,6 +7,6 @@
 #define BUTTON_PIN D6
 
 #define LCD_ADDRESS 0x27
-#define BME280_ADDRESS 0x76
+// #define BME280_ADDRESS 0x76
 
 #endif // DEFINITIONS_H_
