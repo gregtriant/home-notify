@@ -58,19 +58,16 @@ void App::loop()
     static unsigned long lastUpdate = 0;
     if (millis() - lastUpdate > 1000) {
         lastUpdate = millis();
-        time_t now = time(nullptr);
-        // Check if NTP has synced (now > some threshold after 1970)
-        if (!this->gTimeSynced && now > 8 * 3600 * 2) {
-            this->gTimeSynced = true;
-            Serial.println("NTP time synced!");
-        }
-        if (gTimeSynced) {
-            gLocalTime = now + this->sc->getLocalTimeOffset();   // Apply server-provided offset.
-            gmtime_r(&gLocalTime, &gLocalTm);                    // Fill struct tm with updated time.
+        if (sc->hasTime()) {
+            int h, m, s;
+            sc->getTime(h, m, s);
 
+            int day, month, year;
+            sc->getDate(year, month, day);
             char buf[25];
-            strftime(buf, sizeof(buf), "%d/%m   %H:%M:%S", &gLocalTm);
+            snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d", year, month, day, h, m);
             display.print(buf, 1);
+            Serial.printf("Time: %s\n", buf);
         }
     }
 }

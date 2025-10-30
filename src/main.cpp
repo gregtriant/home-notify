@@ -11,7 +11,6 @@
 #include "OneButton.h"
 #include "globals.h"
 
-
 I2CScanner scanner;
 SocketClient socketClient;
 App *app;
@@ -79,7 +78,7 @@ SocketClientConfig_t config = {
     .port = 80,
     .isSSL = false,
     .token = token,  // from globals.h
-    .handleWifi = true,
+    .handleWifi = false,
     .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
@@ -94,6 +93,18 @@ void setup()
 
     scanner.Init();
     scanner.Scan();
+
+
+    // Connect to wifi
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("Connected to WiFi");
+    // print local IP
+    Serial.print("Local IP: ");
+    Serial.println(WiFi.localIP());
 
     socketClient.init(&config);
 
@@ -123,10 +134,6 @@ void loop()
     if (millis() - lastPrint > 5000) {
         lastPrint = millis();
         Serial.printf("\n[Heap check] Free: %d, Max block: %d, Frag: %d%%\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
-    
-        char buf[25];
-        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", app->getLocalTm());
-        Serial.println(buf);
     }
 
 }
