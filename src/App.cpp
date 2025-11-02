@@ -48,6 +48,23 @@ void App::init()
     button.attachLongPressStop(&App::handleLongPressStop, this);
 }
 
+const char* App::getWDayStr() 
+{
+    time_t epochTime = time(nullptr);
+    struct tm *timeinfo = localtime(&epochTime);
+    int wday = timeinfo->tm_wday;
+    switch (wday) {
+        case 0: return "Sun";
+        case 1: return "Mon";
+        case 2: return "Tue";
+        case 3: return "Wed";
+        case 4: return "Thu";
+        case 5: return "Fri";
+        case 6: return "Sat";
+        default: return "???";
+    }
+}
+
 void App::loop()
 {
     button.tick();
@@ -64,8 +81,9 @@ void App::loop()
 
             int day, month, year;
             sc->getDate(year, month, day);
+
             char buf[25];
-            snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d", year, month, day, h, m);
+            snprintf(buf, sizeof(buf), "%s %02d-%02d  %02d:%02d", getWDayStr(), day, month, h, m);
             display.print(buf, 1);
             Serial.printf("Time: %s\n", buf);
         }

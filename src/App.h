@@ -10,7 +10,8 @@
 #include "Display.h"
 
 class App {
-   private:
+
+private:
     SocketClient *sc;
 
     String message;
@@ -35,6 +36,7 @@ class App {
     struct tm gLocalTm;          // Broken-down time
     bool gTimeSynced = false;    // Flag to indicate NTP synced
 
+    const char* getWDayStr();
 public:
     App(String appName, SocketClient *sc);
 
