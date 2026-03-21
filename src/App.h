@@ -25,8 +25,12 @@ private:
     float pressure;
 
     // Adafruit_BME280 bme;
-    Display display;
-    OneButton button;
+    // Display display;
+    OneButton button{BUTTON_PIN}; // Original button
+
+    OneButton button1{BUTTON1};   // Buttons for homeassistant testing
+    OneButton button2{BUTTON2};
+
     Ticker ledTimer;         // Timer for LED blinking.
     Ticker displayTimer;     // Timer to turn off LCD after some time.
     SocketClient *socketClient;
@@ -46,8 +50,8 @@ public:
     void recievedMessage(String message);
 
     void showMessage(String message) {
-        display.clearRow(0);
-        display.print(message, 0);
+        // display.clearRow(0);
+        // display.print(message, 0);
     }
 
     void setMessage(String message) {
@@ -97,6 +101,9 @@ public:
     static void handleLongPressStart(void *parameter);
     static void handleDuringLongPress(void *parameter);
     static void handleLongPressStop(void *parameter);
+
+    static void handleClick1(void *parameter);
+    static void handleClick2(void *parameter);
 
     //   void printBME280Values() {
     //     Serial.print("Temperature = ");

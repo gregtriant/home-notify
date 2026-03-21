@@ -3,11 +3,11 @@
 #include <SocketClient.h>
 #include <Wire.h>
 #include <time.h>
+#include <I2CScanner.h>
 
 #include "App.h"
 #include "Definitions.h"
 #include "Display.h"
-#include "I2CScanner.h"
 #include "OneButton.h"
 #include "globals.h"
 
@@ -17,11 +17,19 @@ App *app;
 
 void sendStatus(JsonDoc status)
 {
+    if (!app) {
+        status["message"] = "App not initialized";
+        return;
+    }
     status["message"] = app->getMessage();
 }
 
 void receivedCommand(JsonDoc doc)
 {
+    if (!app) {
+        Serial.println("App not initialized");
+        return;
+    }
     String command = doc["data"].as<String>();
     // If command starts with @, it is a command, else set message.
     if (command.startsWith("@")) {
@@ -60,7 +68,9 @@ void connected(JsonDoc doc)
     String defaultMessage = doc["default_message"].as<String>();
     Serial.print("Default message: ");
     Serial.println(defaultMessage);
-    app->setDefaultMessage(defaultMessage);
+    if (app) {
+        app->setDefaultMessage(defaultMessage);
+    }
 
     socketClient.sendNotification("Connected!");
     socketClient.sendStatusWithSocket(true);
@@ -72,13 +82,13 @@ void connected(JsonDoc doc)
 SocketClientConfig_t config = {
     .name = "Home-Notify",
     .version = VERSION,
-    .type = "ESP8266",
+    .type = "ESP32",
     .ledPin = LED_PIN,
-    .host = "insecure2.sensordata.space", //"api.sensordata.space",
-    .port = 80,
-    .isSSL = false,
+    .host = "api.sensordata.space", //"insecure2.sensordata.space",
+    .port = 443,
+    .isSSL = true,
     .token = token,  // from globals.h
-    .handleWifi = false,
+    .handleWifi = true,
     .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
@@ -88,52 +98,28 @@ SocketClientConfig_t config = {
 void setup()
 {
     Serial.begin(115200);
-    while (!Serial) {
-    };
-
+    while(!Serial) {;}
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH); // turn off LED
+    pinMode(BUTTON_PIN, INPUT_PULLUP); // Set button pin with pullup
+    pinMode(BUTTON1, INPUT_PULLUP);    // Set button1 pin with pullup  
+    pinMode(BUTTON2, INPUT_PULLUP);    // Set button2 pin with pullup
+    
+    // Initialize and run I2C scanner
     scanner.Init();
     scanner.Scan();
-
-
-    // Connect to wifi
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi...");
-    }
-    Serial.println("Connected to WiFi");
-    // print local IP
-    Serial.print("Local IP: ");
-    Serial.println(WiFi.localIP());
-
+    
     socketClient.init(&config);
-
     app = new App(config.name, &socketClient);
     app->init();
-
-    Serial.println("ESP8266 Memory Info");
-
-    // Basic free heap info
-    Serial.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
-    Serial.printf("Max allocatable block: %d bytes\n", ESP.getMaxFreeBlockSize());
-    Serial.printf("Heap fragmentation: %d %%\n", ESP.getHeapFragmentation());
-
-    // Flash / sketch size info
-    Serial.printf("Flash chip size: %d bytes\n", ESP.getFlashChipRealSize());
-    Serial.printf("Sketch size: %d bytes\n", ESP.getSketchSize());
-    Serial.printf("Free sketch space: %d bytes\n", ESP.getFreeSketchSpace());
+    Serial.println("---Setup complete---");
 }
 
 void loop()
 {
     socketClient.loop();
     app->loop();
-
-    // Print heap status periodically
-    static unsigned long lastPrint = 0;
-    if (millis() - lastPrint > 5000) {
-        lastPrint = millis();
-        Serial.printf("\n[Heap check] Free: %d, Max block: %d, Frag: %d%%\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
-    }
-
+    
+    // Small delay to prevent overwhelming the CPU
+    delay(10);
 }
