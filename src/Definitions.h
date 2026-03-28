@@ -10,7 +10,9 @@
 #define BUTTON1 25
 #define BUTTON2 26
 
-#define LCD_ADDRESS 0x27
+#ifndef DISPLAY_WAVESHARE
+#define LCD_ADDRESS 0x3E
+#endif
 // #define BME280_ADDRESS 0x76
 
 #endif // DEFINITIONS_H_

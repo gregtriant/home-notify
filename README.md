@@ -1,12 +1,32 @@
 
-# Home Notification Device.
+# Home Notification Device
 
-This device is equiped with an 16x2 LCD display, a bmp280 environmental sensor, a button, an LED and a buzzer.
-Used for:
-- recieving messages from users and displaying them,
-- displaying date and time,
-- displaying temperature and humidity,
-- set specified timers for alarms.
+An ESP32-based device that displays remote notifications on a 16×2 LCD and publishes button events to Home Assistant via MQTT.
 
-The device is empowered by sensordata.space, where it connects and is shared by its users.
-A device specific dashboard was also created for this device.
+## Hardware
+
+- **AZ-Delivery ESP32 DevKit V4**
+- **Waveshare LCD1602** — 16×2 I2C display (`0x3E`) with SN3193 backlight controller (`0x6B`)
+- **3 buttons** — boot button (GPIO 0) + two user buttons (GPIO 25, 26)
+- **LED** — active-low on GPIO 2
+
+## Features
+
+- Receives and displays messages from [sensordata.space](https://api.sensordata.space)
+- Shows date and time (row 1: `WWW DD-MM  HH:MM`)
+- Publishes button events to Home Assistant via MQTT autodiscovery
+- Backlight dims after 10 seconds of inactivity; brightens on new message
+
+## Setup
+
+1. Copy `src/MQTTConfig.h` from the template in `CLAUDE.md` and fill in your broker details
+2. Copy `src/globals.h` with your sensordata.space auth token
+3. Build and flash:
+
+```bash
+pio run --target upload && pio device monitor
+```
+
+## Dependencies
+
+Managed via PlatformIO (`platformio.ini`). The `Waveshare_LCD1602` driver is bundled in `lib/`. The `SocketClient` library is expected as a symlink at `../SocketClient`.

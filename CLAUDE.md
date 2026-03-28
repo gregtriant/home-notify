@@ -33,7 +33,7 @@ The firmware has two parallel subsystems that run in the same `loop()`:
 
 **Message flow:** Remote commands arrive via `SocketClient` → `receivedCommand()` in `main.cpp` → `app->recievedMessage()` → shown on LCD row 0 + LED blinks. Button1/Button2 clicks go the other direction: hardware → MQTT publish → Home Assistant.
 
-**MQTT / Home Assistant:** `App` connects to the local broker defined in `src/MQTTConfig.h` and publishes Home Assistant autodiscovery configs on first connect. Button events publish to `homeassistant/device/home_notify/<button>/state`. Connection is retried every 5 seconds inside `loopMQTT()`.
+**MQTT / Home Assistant:** `App` owns a `HAMqtt` instance (`src/HAMqtt.h/.cpp`) which connects to the broker defined in `src/MQTTConfig.h`, publishes Home Assistant autodiscovery configs on first connect, and exposes `publishEvent(entityId, action)`. Button events publish to `homeassistant/device/home_notify/<button>/state`. Reconnect is retried every `MQTT_RECONNECT_INTERVAL` ms.
 
 ## Key Files
 
@@ -42,7 +42,9 @@ The firmware has two parallel subsystems that run in the same `loop()`:
 | `src/Definitions.h` | Pin assignments and VERSION |
 | `src/globals.h` | Auth token for SocketClient (not committed to shared history — keep out of logs) |
 | `src/MQTTConfig.h` | MQTT broker IP/port/credentials — **untracked**, create locally |
-| `src/Display.h/.cpp` | Thin wrapper around LiquidCrystal_I2C (16×2, I2C addr `0x27`) |
+| `src/Display.h/.cpp` | Dual-display abstraction: LiquidCrystal_I2C (default) or Waveshare LCD1602 (I2C addr `0x3E`, backlight via SN3193 at `0x6B`), selected at compile time via `-D DISPLAY_WAVESHARE` in `platformio.ini` |
+| `src/HAMqtt.h/.cpp` | MQTT + Home Assistant autodiscovery; manages entity registration and event publishing |
+| `lib/Waveshare_LCD1602/` | Local Waveshare LCD1602 driver (not from registry) — handles both LCD and SN3193 backlight |
 
 ## Local Config Files
 
@@ -69,3 +71,20 @@ The firmware has two parallel subsystems that run in the same `loop()`:
 - BUTTON_PIN (GPIO 0) is the boot button — hold behavior may interfere with flashing
 - BME280 sensor code is fully commented out; I2CScanner runs at startup to detect connected devices
 - SocketClient is a local symlink (`lib` or sibling dir); if the build can't find it, check `platformio.ini` symlink path
+
+## Display Driver Selection
+
+Two LCD drivers are supported, selected by a build flag in `platformio.ini`:
+
+```ini
+; Waveshare LCD1602 (lib/Waveshare_LCD1602):
+build_flags = -D DISPLAY_WAVESHARE
+
+; LiquidCrystal_I2C (default — comment out or leave empty):
+; build_flags =
+```
+
+- `DISPLAY_WAVESHARE` is the active configuration — hardware confirmed as Waveshare LCD1602 (LCD at `0x3E`, SN3193 backlight at `0x6B`)
+- `LCD_ADDRESS` in `Definitions.h` is guarded by `#ifndef DISPLAY_WAVESHARE` and only applies to LiquidCrystal_I2C builds
+- Brightness defaults: 50 (on/init), 2 (dimmed/off); `Display::setBrightness()` maps 0–255 → SN3193's 0–100 scale
+- `Display::setRGB()` is a no-op on both drivers

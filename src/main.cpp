@@ -100,13 +100,13 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH); // turn off LED
     pinMode(BUTTON_PIN, INPUT_PULLUP); // Set button pin with pullup
-    pinMode(BUTTON1, INPUT_PULLUP);    // Set button1 pin with pullup  
+    pinMode(BUTTON1, INPUT_PULLUP);    // Set button1 pin with pullup
     pinMode(BUTTON2, INPUT_PULLUP);    // Set button2 pin with pullup
-    
+
     // Initialize and run I2C scanner
     scanner.Init();
     scanner.Scan();
-    
+
     socketClient.init(&config);
     app = new App(config.name, &socketClient);
     app->init();
@@ -117,7 +117,7 @@ void loop()
 {
     socketClient.loop();
     app->loop();
-    
+
     // Small delay to prevent overwhelming the CPU
     delay(10);
 }
