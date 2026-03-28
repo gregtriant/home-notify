@@ -2,3 +2,4 @@
 .vscode
 
 globals.h
+src/MQTTConfig.h
