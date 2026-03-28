@@ -1,25 +1,26 @@
 #include "App.h"
+#include <WiFi.h>
 
 App::App(String appName, SocketClient *sc)
-    : /*display(LCD_ADDRESS),*/
+    : display(LCD_ADDRESS),
       ledTimer([this]() { this->toggleLed_cb(nullptr); }, 1*1000, 0, MILLIS),
-      displayTimer([this]() { /* this->display.backlightOff(); */ }, 10*1000, 0, MILLIS)
+      displayTimer([this]() { this->display.backlightOff(); }, 10*1000, 0, MILLIS)
 {
     this->sc = sc;
-    // display.begin();
-    // display.clear();
-    // display.print(appName);
-    // display.setCursor(0, 1);
-    // display.print("Version: ");
-    // display.print(VERSION);
+    display.begin();
+    display.clear();
+    display.print(appName);
+    display.setCursor(0, 1);
+    display.print("Version: ");
+    display.print(VERSION);
 
     // Don't start timers in constructor - do it in init() instead
-    // displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
+    displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
 }
 
 
 void App::recievedMessage(String message) {
-    // display.backlightOn(); // Turn on backlight when a new message is received.
+    display.backlightOn(); // Turn on backlight when a new message is received.
     displayTimer.start();  // Restart the LCD timer.
 
     setMessage(message);
@@ -58,10 +59,15 @@ void App::init()
 
     button2.attachClick(&App::handleClick2, this);
 
+    // Initialize MQTT with Home Assistant entities
+    haMqtt.addEntity({"button1", "Home Notify Button 1"});
+    haMqtt.addEntity({"button2", "Home Notify Button 2"});
+    haMqtt.init();
+
     // Start timers after everything is properly initialized
     displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
     
-    Serial.println("App initialization complete");
+    Serial.println("--- app init ok ---");
 }
 
 const char* App::getWDayStr() 
@@ -89,23 +95,26 @@ void App::loop()
     ledTimer.update();
     displayTimer.update();
 
+    // Handle MQTT
+    haMqtt.loop();
+
     // Time related things.
     static unsigned long lastUpdate = 0;
     if (millis() - lastUpdate > 1000) {
         lastUpdate = millis();
         // Commented out time display code since display is not used
-        // if (sc->hasTime()) {
-        //     int h, m, s;
-        //     sc->getTime(h, m, s);
+        if (sc->hasTime()) {
+            int h, m, s;
+            sc->getTime(h, m, s);
 
-        //     int day, month, year;
-        //     sc->getDate(year, month, day);
+            int day, month, year;
+            sc->getDate(year, month, day);
 
-        //     char buf[25];
-        //     snprintf(buf, sizeof(buf), "%s %02d-%02d  %02d:%02d", getWDayStr(), day, month, h, m);
-        //     display.print(buf, 1);
-        //     Serial.printf("Time: %s\n", buf);
-        // }
+            char buf[25];
+            snprintf(buf, sizeof(buf), "%s %02d-%02d  %02d:%02d", getWDayStr(), day, month, h, m);
+            display.print(buf, 1);
+            // Serial.printf("Time: %s\n", buf);
+        }
     }
 }
 
@@ -118,7 +127,7 @@ void App::handleClick(void *parameter)
     self->ledTimer.stop();
     self->ledOFF();
 
-    // self->display.backlightOn(); // Turn on backlight when a new message is received.
+    self->display.backlightOn(); // Turn on backlight when a new message is received.
     self->displayTimer.start();  // Restart the LCD timer.
 }
 
@@ -149,6 +158,7 @@ void App::handleClick1(void *parameter)
 {
     App *self = static_cast<App *>(parameter);
     Serial.println("Clicked1() from static method");
+    self->publishButtonEvent("button1", "click");
 }
 
 
@@ -156,4 +166,6 @@ void App::handleClick2(void *parameter)
 {
     App *self = static_cast<App *>(parameter);
     Serial.println("Clicked2() from static method");
+    self->publishButtonEvent("button2", "click");
 }
+

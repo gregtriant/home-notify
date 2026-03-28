@@ -5,9 +5,11 @@
 #include <arduino-timer.h>
 #include <Ticker.h>
 #include <time.h>
+#include <ArduinoJson.h>
 
 #include "Definitions.h"
 #include "Display.h"
+#include "HAMqtt.h"
 
 class App {
 
@@ -25,7 +27,7 @@ private:
     float pressure;
 
     // Adafruit_BME280 bme;
-    // Display display;
+    Display display;
     OneButton button{BUTTON_PIN}; // Original button
 
     OneButton button1{BUTTON1};   // Buttons for homeassistant testing
@@ -34,6 +36,8 @@ private:
     Ticker ledTimer;         // Timer for LED blinking.
     Ticker displayTimer;     // Timer to turn off LCD after some time.
     SocketClient *socketClient;
+
+    HAMqtt haMqtt;
 
     // Time related things
     time_t gLocalTime = 0;       // Timestamp with offset applied
@@ -50,8 +54,8 @@ public:
     void recievedMessage(String message);
 
     void showMessage(String message) {
-        // display.clearRow(0);
-        // display.print(message, 0);
+        display.clearRow(0);
+        display.print(message, 0);
     }
 
     void setMessage(String message) {
@@ -104,6 +108,9 @@ public:
 
     static void handleClick1(void *parameter);
     static void handleClick2(void *parameter);
+
+    void publishButtonEvent(String buttonName, String action) { haMqtt.publishEvent(buttonName, action); }
+    bool isMQTTConnected() { return haMqtt.isConnected(); }
 
     //   void printBME280Values() {
     //     Serial.print("Temperature = ");

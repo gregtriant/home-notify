@@ -7,8 +7,6 @@
 
 #include "App.h"
 #include "Definitions.h"
-#include "Display.h"
-#include "OneButton.h"
 #include "globals.h"
 
 I2CScanner scanner;
