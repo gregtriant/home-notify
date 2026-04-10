@@ -9,7 +9,6 @@
 
 #include "Definitions.h"
 #include "Display.h"
-#include "HAMqtt.h"
 
 class App {
 
@@ -36,8 +35,6 @@ private:
     Ticker ledTimer;         // Timer for LED blinking.
     Ticker displayTimer;     // Timer to turn off LCD after some time.
     SocketClient *socketClient;
-
-    HAMqtt haMqtt;
 
     // Time related things
     time_t gLocalTime = 0;       // Timestamp with offset applied
@@ -109,8 +106,18 @@ public:
     static void handleClick1(void *parameter);
     static void handleClick2(void *parameter);
 
-    void publishButtonEvent(String buttonName, String action) { haMqtt.publishEvent(buttonName, action); }
-    bool isMQTTConnected() { return haMqtt.isConnected(); }
+    void publishButtonEvent(String buttonName, String action) {
+#ifdef SC_ENABLE_HA_MQTT
+        if (sc->getMqttClient()) sc->getMqttClient()->publishEvent(buttonName, action);
+#endif
+    }
+    bool isMQTTConnected() {
+#ifdef SC_ENABLE_HA_MQTT
+        return sc->getMqttClient() && sc->getMqttClient()->isConnected();
+#else
+        return false;
+#endif
+    }
 
     //   void printBME280Values() {
     //     Serial.print("Temperature = ");

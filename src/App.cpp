@@ -59,10 +59,12 @@ void App::init()
 
     button2.attachClick(&App::handleClick2, this);
 
-    // Initialize MQTT with Home Assistant entities
-    haMqtt.addEntity({"button1", "Home Notify Button 1"});
-    haMqtt.addEntity({"button2", "Home Notify Button 2"});
-    haMqtt.init();
+#ifdef SC_ENABLE_HA_MQTT
+    if (sc->getMqttClient()) {
+        sc->getMqttClient()->addEntity({"button1", "Home Notify Button 1"});
+        sc->getMqttClient()->addEntity({"button2", "Home Notify Button 2"});
+    }
+#endif
 
     // Start timers after everything is properly initialized
     displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
@@ -95,8 +97,7 @@ void App::loop()
     ledTimer.update();
     displayTimer.update();
 
-    // Handle MQTT
-    haMqtt.loop();
+    // MQTT is handled by SocketClient::loop()
 
     // Time related things.
     static unsigned long lastUpdate = 0;
@@ -157,7 +158,6 @@ void App::handleLongPressStop(void *parameter)
 void App::handleClick1(void *parameter)
 {
     App *self = static_cast<App *>(parameter);
-    Serial.println("Clicked1() from static method");
     self->publishButtonEvent("button1", "click");
 }
 
@@ -165,7 +165,6 @@ void App::handleClick1(void *parameter)
 void App::handleClick2(void *parameter)
 {
     App *self = static_cast<App *>(parameter);
-    Serial.println("Clicked2() from static method");
     self->publishButtonEvent("button2", "click");
 }
 

@@ -8,6 +8,9 @@
 #include "App.h"
 #include "Definitions.h"
 #include "globals.h"
+#ifdef SC_ENABLE_HA_MQTT
+#include "MQTTConfig.h"
+#endif
 
 I2CScanner scanner;
 SocketClient socketClient;
@@ -74,6 +77,17 @@ void connected(JsonDoc doc)
     socketClient.sendStatusWithSocket(true);
 }
 
+#ifdef SC_ENABLE_HA_MQTT
+static const HAMqttConfig_t mqttCfg = {
+    .server      = MQTT_SERVER,
+    .port        = MQTT_PORT,
+    .username    = MQTT_USERNAME,
+    .password    = MQTT_PASSWORD,
+    .deviceName  = DEVICE_NAME,
+    .displayName = "Home Notify",
+};
+#endif
+
 /**
  * Configuration for the SocketClient
  */
@@ -86,7 +100,13 @@ SocketClientConfig_t config = {
     .port = 443,
     .isSSL = true,
     .token = token,  // from globals.h
-    .handleWifi = true,
+    .useOTA       = true,
+    .useTime      = true,
+    .useWifi      = true,
+    .useWebserver = true,
+#ifdef SC_ENABLE_HA_MQTT
+    .mqttConfig   = &mqttCfg,
+#endif
     .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
