@@ -59,12 +59,10 @@ void App::init()
 
     button2.attachClick(&App::handleClick2, this);
 
-#ifdef SC_ENABLE_HA_MQTT
-    if (sc->getMqttClient()) {
-        sc->getMqttClient()->addEntity({"button1", "Home Notify Button 1"});
-        sc->getMqttClient()->addEntity({"button2", "Home Notify Button 2"});
+    if (_mqtt) {
+        _mqtt->addEntity({"button1", "Home Notify Button 1"});
+        _mqtt->addEntity({"button2", "Home Notify Button 2"});
     }
-#endif
 
     // Start timers after everything is properly initialized
     displayTimer.start(); // Start the LCD timer to turn off backlight after some time.
@@ -96,8 +94,6 @@ void App::loop()
     button2.tick();
     ledTimer.update();
     displayTimer.update();
-
-    // MQTT is handled by SocketClient::loop()
 
     // Time related things.
     static unsigned long lastUpdate = 0;

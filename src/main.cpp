@@ -8,13 +8,13 @@
 #include "App.h"
 #include "Definitions.h"
 #include "globals.h"
-#ifdef SC_ENABLE_HA_MQTT
+#include <Mqtt/HAMqtt.h>
 #include "MQTTConfig.h"
-#endif
 
 I2CScanner scanner;
 SocketClient socketClient;
 App *app;
+HAMqtt *mqttClient = nullptr;
 
 void sendStatus(JsonDoc status)
 {
@@ -77,7 +77,6 @@ void connected(JsonDoc doc)
     socketClient.sendStatusWithSocket(true);
 }
 
-#ifdef SC_ENABLE_HA_MQTT
 static const HAMqttConfig_t mqttCfg = {
     .server      = MQTT_SERVER,
     .port        = MQTT_PORT,
@@ -86,7 +85,6 @@ static const HAMqttConfig_t mqttCfg = {
     .deviceName  = DEVICE_NAME,
     .displayName = "Home Notify",
 };
-#endif
 
 /**
  * Configuration for the SocketClient
@@ -100,13 +98,7 @@ SocketClientConfig_t config = {
     .port = 443,
     .isSSL = true,
     .token = token,  // from globals.h
-    .useOTA       = true,
-    .useTime      = true,
-    .useWifi      = true,
-    .useWebserver = true,
-#ifdef SC_ENABLE_HA_MQTT
-    .mqttConfig   = &mqttCfg,
-#endif
+    .handleWifi = true,
     .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
@@ -128,7 +120,10 @@ void setup()
     scanner.Scan();
 
     socketClient.init(&config);
+    socketClient.initWebserver(80);
+    mqttClient = new HAMqtt(&mqttCfg);
     app = new App(config.name, &socketClient);
+    app->setMqttClient(mqttClient);
     app->init();
     Serial.println("---Setup complete---");
 }
@@ -136,6 +131,7 @@ void setup()
 void loop()
 {
     socketClient.loop();
+    if (mqttClient) mqttClient->loop();
     app->loop();
 
     // Small delay to prevent overwhelming the CPU

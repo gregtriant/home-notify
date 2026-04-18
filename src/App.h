@@ -9,11 +9,13 @@
 
 #include "Definitions.h"
 #include "Display.h"
+#include <Mqtt/HAMqtt.h>
 
 class App {
 
 private:
     SocketClient *sc;
+    HAMqtt *_mqtt = nullptr;
 
     String message;
     String defaultMessage; // Message to show on double click.
@@ -47,6 +49,7 @@ public:
 
     void init();
     void loop();
+    void setMqttClient(HAMqtt *mqtt) { _mqtt = mqtt; }
 
     void recievedMessage(String message);
 
@@ -107,16 +110,10 @@ public:
     static void handleClick2(void *parameter);
 
     void publishButtonEvent(String buttonName, String action) {
-#ifdef SC_ENABLE_HA_MQTT
-        if (sc->getMqttClient()) sc->getMqttClient()->publishEvent(buttonName, action);
-#endif
+        if (_mqtt) _mqtt->publishEvent(buttonName, action);
     }
     bool isMQTTConnected() {
-#ifdef SC_ENABLE_HA_MQTT
-        return sc->getMqttClient() && sc->getMqttClient()->isConnected();
-#else
-        return false;
-#endif
+        return _mqtt && _mqtt->isConnected();
     }
 
     //   void printBME280Values() {
