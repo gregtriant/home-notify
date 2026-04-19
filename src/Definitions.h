@@ -1,7 +1,7 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
-#define VERSION 1.1
+#define VERSION 1.12
 
 // Use ESP32-safe GPIO pins
 #define LED_PIN    2   // D5 -
