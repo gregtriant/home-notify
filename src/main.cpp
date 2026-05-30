@@ -44,6 +44,9 @@ void receivedCommand(JsonDoc doc)
         } else if (command == "@reboot") {
             socketClient.disconnect();
             ESP.restart();
+        } else if (command == "@notify") {
+            Serial.printf("Received notify command: %s\n", command.c_str());
+            socketClient.sendNotification("This is a notification from the device!");
         }
 
     } else if (command != app->getMessage()) {  // New message recieved
