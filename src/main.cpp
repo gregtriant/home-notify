@@ -106,6 +106,15 @@ SocketClientConfig_t config = {
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
     .connected = connected,
+    .onFileReceived = [](const String &filename, const uint8_t *buf, size_t size) {
+        Serial.printf("[FileTransfer] received '%s' (%u bytes)\n", filename.c_str(), size);
+        Serial.print("[FileTransfer] first bytes: ");
+        size_t preview = (size < 32) ? size : 32;
+        for (size_t i = 0; i < preview; i++) {
+            Serial.printf("%02X ", buf[i]);
+        }
+        Serial.println();
+    },
 };
 
 void setup()
