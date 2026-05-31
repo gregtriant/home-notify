@@ -106,6 +106,17 @@ SocketClientConfig_t config = {
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
     .connected = connected,
+    .onFileReceived = [](const String &filename, const uint8_t *buf, size_t size) {
+        String text((const char *)buf, size);
+        SC_LOGI(APP_TAG, "file '%s' (%u bytes): %s", filename.c_str(), size, text.c_str());
+    },
+    .getFile = [](const String &filename, uint8_t *buf, size_t maxSize) -> size_t {
+        String text = "Hello from home-notify!";
+        size_t len = text.length() < maxSize ? text.length() : maxSize;
+        memcpy(buf, text.c_str(), len);
+        SC_LOGI(APP_TAG, "file requested '%s', sending %u bytes: %s", filename.c_str(), len, text.c_str());
+        return len;
+    },
 };
 
 void setup()
