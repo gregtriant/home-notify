@@ -97,25 +97,23 @@ SocketClientConfig_t config = {
     .version = VERSION,
     .type = "ESP32",
     .ledPin = LED_PIN,
-    .host = "api.sensordata.space", //"insecure2.sensordata.space",
-    .port = 443,
-    .isSSL = true,
-    .token = token,  // from globals.h
+    .host = "api.sensordata.space",//"192.168.2.110", //"api.sensordata.space", //"insecure2.sensordata.space",
+    .port = 443, // 443,
+    .isSSL = true, // true,
+    .token = "", //token,  // from globals.h
     .handleWifi = true,
     .sendStatus = sendStatus,
     .receivedCommand = receivedCommand,
     .entityChanged = entityChanged,
     .connected = connected,
-    .onFileReceived = [](const String &filename, const uint8_t *buf, size_t size) {
-        String text((const char *)buf, size);
-        SC_LOGI(APP_TAG, "file '%s' (%u bytes): %s", filename.c_str(), size, text.c_str());
+    .fileReceived = [](const String &filename, const std::vector<uint8_t> &buf) {
+        String text((const char *)buf.data(), buf.size());
+        SC_LOGI(APP_TAG, "file '%s' (%u bytes): %s", filename.c_str(), buf.size(), text.c_str());
     },
-    .getFile = [](const String &filename, uint8_t *buf, size_t maxSize) -> size_t {
+    .fileRequested = [](const String &filename, std::vector<uint8_t> &buf) {
         String text = "Hello from home-notify!";
-        size_t len = text.length() < maxSize ? text.length() : maxSize;
-        memcpy(buf, text.c_str(), len);
-        SC_LOGI(APP_TAG, "file requested '%s', sending %u bytes: %s", filename.c_str(), len, text.c_str());
-        return len;
+        buf.assign(text.c_str(), text.c_str() + text.length());
+        SC_LOGI(APP_TAG, "file requested '%s', sending %u bytes: %s", filename.c_str(), buf.size(), text.c_str());
     },
 };
 
