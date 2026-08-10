@@ -1,5 +1,9 @@
 .pio
 .vscode
 
+# claude
+docs/superpowers
+
+# configuration files
 globals.h
 src/MQTTConfig.h
