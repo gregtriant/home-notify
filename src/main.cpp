@@ -110,10 +110,16 @@ SocketClientConfig_t config = {
         String text((const char *)buf.data(), buf.size());
         SC_LOGI(APP_TAG, "file '%s' (%u bytes): %s", filename.c_str(), buf.size(), text.c_str());
     },
-    .fileRequested = [](const String &filename, std::vector<uint8_t> &buf) {
-        String text = "Hello from home-notify!";
-        buf.assign(text.c_str(), text.c_str() + text.length());
-        SC_LOGI(APP_TAG, "file requested '%s', sending %u bytes: %s", filename.c_str(), buf.size(), text.c_str());
+    .fileRequested = [](String &filename, std::vector<uint8_t> &buf) {
+        if (filename == "cfg" || filename == "cfg.txt") {
+            String text = "This is a cfg file";
+            buf.assign(text.c_str(), text.c_str() + text.length());
+            filename = "cfg.txt";
+            SC_LOGI(APP_TAG, "file requested '%s', sending %u bytes: %s", filename.c_str(), buf.size(), text.c_str());
+            return;
+        }
+        // Leave buf empty for anything else.
+        SC_LOGW(APP_TAG, "file requested '%s' - no such file", filename.c_str());
     },
 };
 
