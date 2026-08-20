@@ -48,7 +48,7 @@ The firmware has two parallel subsystems that run in the same `loop()`:
 
 ## Local Config Files
 
-`src/MQTTConfig.h` is gitignored/untracked and must be created manually. Template:
+`src/MQTTConfig.h` is gitignored/untracked and must be created manually — copy the tracked `src/MQTTConfig.example.h` to `src/MQTTConfig.h` and edit the values. Template:
 
 ```cpp
 #ifndef MQTT_CONFIG_H_
