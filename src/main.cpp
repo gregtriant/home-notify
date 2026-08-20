@@ -6,10 +6,9 @@
 #include <I2CScanner.h>
 
 #include "App.h"
-#include "Definitions.h"
-#include "globals.h"
-#include <Mqtt/HAMqtt.h>
 #include "MQTTConfig.h"
+#include "Definitions.h"
+#include <Mqtt/HAMqtt.h>
 
 I2CScanner scanner;
 SocketClient socketClient;
